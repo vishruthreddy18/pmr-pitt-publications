@@ -1,0 +1,24 @@
+# Manual one-author Scopus key test, run from a GitHub-hosted runner
+# (i.e. from outside the Pitt network). Writes nothing, commits nothing.
+name: Scopus key test
+
+on:
+  workflow_dispatch:
+    inputs:
+      au_id:
+        description: Scopus author ID to test
+        default: "6507050125"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r sync/requirements.txt
+      - run: python sync/sync.py --test "${{ inputs.au_id }}"
+        env:
+          SCOPUS_API_KEY: ${{ secrets.SCOPUS_API_KEY }}
+          SCOPUS_INSTTOKEN: ${{ secrets.SCOPUS_INSTTOKEN }}
