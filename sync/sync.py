@@ -7,7 +7,7 @@ queries the Scopus Search API for each author ID, dedupes by EID, and writes
 data/publications.json + data/meta.json.
 
 Usage:
-    export SCOPUS_API_KEY=...            # never commit this
+    # Put SCOPUS_API_KEY=... in .env (git-ignored), or export it.
     python sync/sync.py --test 6507050125   # key test: one author, writes nothing
     python sync/sync.py                     # full sync, writes data/ if changed
     python sync/sync.py --force             # skip the "suspiciously low count" check
@@ -244,7 +244,23 @@ def run_sync(api, force=False):
     return 0
 
 
+def load_dotenv(path=ROOT / ".env"):
+    """Read KEY=value lines from .env (local use only; GitHub uses Secrets).
+    Real environment variables win over the file."""
+    if not path.exists():
+        return
+    for line in path.read_text().splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        value = value.strip().strip('"').strip("'")
+        if value:
+            os.environ.setdefault(key.strip(), value)
+
+
 def main():
+    load_dotenv()
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--test", metavar="AU_ID", help="fetch one author and print a report; writes nothing")
     parser.add_argument("--force", action="store_true", help="skip the low-count safety check")
